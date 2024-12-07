@@ -1,0 +1,67 @@
+#include <WiFi.h>
+#include <BlynkSimpleEsp32.h>
+#include <edge-impulse-standalone.h> // Replace with your model library
+
+// Blynk Auth Token
+char auth[] = "YOUR_BLYNK_AUTH_TOKEN";
+
+// WiFi Credentials
+char ssid[] = "YOUR_WIFI_SSID";
+char pass[] = "YOUR_WIFI_PASSWORD";
+
+// Virtual Pin for fire detection
+#define FIRE_DETECTION_PIN V0
+
+// Fire detection flag
+bool fireDetected = false;
+
+void setup() {
+  // Initialize Serial for debugging
+  Serial.begin(115200);
+  
+  // Initialize Blynk
+  Blynk.begin(auth, ssid, pass);
+
+  // Initialize Camera (if required for image capture)
+  if (!initCamera()) {
+    Serial.println("Camera initialization failed!");
+    while (1);
+  }
+
+  Serial.println("Setup complete. Waiting for fire detection...");
+}
+
+void loop() {
+  Blynk.run(); // Run Blynk
+
+  // Capture image and run fire detection model
+  bool fire = detectFire(); // Replace with your model inference logic
+
+  if (fire) {
+    // If fire detected, update Blynk and send notification
+    if (!fireDetected) { // To avoid duplicate alerts
+      fireDetected = true;
+      Blynk.virtualWrite(FIRE_DETECTION_PIN, "FIRE DETECTED");
+      Blynk.notify("🔥 Fire detected! Take action immediately!");
+    }
+  } else {
+    // Reset flag when fire is no longer detected
+    if (fireDetected) {
+      fireDetected = false;
+      Blynk.virtualWrite(FIRE_DETECTION_PIN, "No Fire");
+    }
+  }
+}
+
+// Initialize Camera (example function)
+bool initCamera() {
+  // Initialize your ESP32-CAM camera here
+  return true; // Return true if successful
+}
+
+// Detect Fire (example function)
+bool detectFire() {
+  // Capture image and run inference with your Edge Impulse model
+  // Replace this with your actual inference logic
+  return false; // Replace with actual detection result
+}
